@@ -1,10 +1,11 @@
 import java.awt.image.BufferedImage;
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-
+import java.awt.event.ActionEvent;
 import javax.swing.*;
-import java.util.*;
+
 
 
 
@@ -19,23 +20,22 @@ public class FractalExplorer extends JFrame {
     static final double DEFAULT_TOP_LEFT_X = -3.0;
     static final double DEFAULT_TOP_LEFT_Y = +3.0;
 
-
     double zoomFactor = DEFAULT_ZOOM;
     double topLeftX = DEFAULT_TOP_LEFT_X;
     double topLeftY = DEFAULT_TOP_LEFT_Y;
 
-    
-
     Canvas canvas;
     BufferedImage fractalImage;
-
 
     public FractalExplorer() {
         setInitialGUIProperties();
         addCanvas();
         updateFractal();
+        canvas.addKeyStrokeEvents();
+        canvas.requestFocusInWindow();
+
     }
-    
+
     private double getXPos(double x) {
         return x / zoomFactor + topLeftX;
     }
@@ -58,15 +58,16 @@ public class FractalExplorer extends JFrame {
         }
         canvas.repaint();
     }
-    
-    private int makeColor(int iterCount) {
-        if (iterCount == MAX_ITER) {
-            return Color.BLACK.getRGB();
-        }
-        return Color.BLUE.getRGB();
-    }
 
-    
+    private int makeColor(int iterCount) {
+        int color = 0b011011100001100101101000;
+        int mask = 0b000000000000010101110111;
+        int shiftMag = iterCount / 13;
+
+        if (iterCount == MAX_ITER)
+            return Color.BLACK.getRGB();
+        return color | (mask << shiftMag);
+    }
 
     private int computeIterations(double c_r, double c_i) {
         /*
@@ -109,12 +110,43 @@ public class FractalExplorer extends JFrame {
         return iterCount;
 
     }
-    
 
-   
-    
+    private void moveUp() {
+        double curHeight = HEIGHT / zoomFactor;
+        topLeftY += curHeight / 6;
+        updateFractal();
+    }
 
-    private void  addCanvas(){
+    private void moveDown() {
+        double curHeight = HEIGHT / zoomFactor;
+        topLeftY -= curHeight / 6;
+        updateFractal();
+    }
+
+    // private void moveLeft() {
+    //     double curHeight = WIDTH / zoomFactor;
+    //     topLeftY -= curHeight / 6;
+    //     updateFractal();
+    // }
+
+    // private void moveRight() {
+    //     double curHeight = WIDTH / zoomFactor;
+    //     topLeftY += curHeight / 6;
+    //     updateFractal();
+    // }
+    private void moveLeft() {
+        double curWidth = WIDTH / zoomFactor; // Use width for horizontal movement
+        topLeftX -= curWidth / 6; // Move left by a fraction of the width
+        updateFractal();
+    }
+
+    private void moveRight() {
+        double curWidth = WIDTH / zoomFactor; // Use width for horizontal movement
+        topLeftX += curWidth / 6; // Move right by a fraction of the width
+        updateFractal();
+    }
+
+    private void addCanvas() {
         canvas = new Canvas();
         fractalImage = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_BGR);
         canvas.setVisible(true);
@@ -143,65 +175,106 @@ public class FractalExplorer extends JFrame {
 
         updateFractal();
 
-
     }
 
-    private class Canvas extends JPanel implements MouseListener
-    {
+    private class Canvas extends JPanel implements MouseListener {
 
-        public Canvas()
-        {
+        public Canvas() {
             addMouseListener(this);
+            setFocusable(true);
+
         }
-       // @Override
-       public Dimension getPreferredSize() {
-           return new Dimension(WIDTH, HEIGHT);
 
-       }
+        // @Override
+        public Dimension getPreferredSize() {
+            return new Dimension(WIDTH, HEIGHT);
 
-       public void paintComponent(Graphics drawingObj) {
-           drawingObj.drawImage(fractalImage, 0, 0, null);
-       }
-        
-       @Override
-       public void mouseReleased(MouseEvent mouse) {
-       }
-        
-       @Override
-       public void mouseClicked(MouseEvent mouse) {
-       }
-       
-       @Override
-       public void mouseEntered(MouseEvent mouse) {
-       }
-       
-       @Override
-       public void mouseExited(MouseEvent mouse) {
-       }
-       
-       public void mousePressed(MouseEvent mouse) {
+        }
 
-           double x = (double) mouse.getX();
-           double y = (double) mouse.getY();
+        public void addKeyStrokeEvents() {
+            KeyStroke wKey = KeyStroke.getKeyStroke(KeyEvent.VK_W, 0);
+            KeyStroke aKey = KeyStroke.getKeyStroke(KeyEvent.VK_A, 0);
+            KeyStroke sKey = KeyStroke.getKeyStroke(KeyEvent.VK_S, 0);
+            KeyStroke dKey = KeyStroke.getKeyStroke(KeyEvent.VK_D, 0);
 
-           switch (mouse.getButton()) {
-               //Left
-               case MouseEvent.BUTTON1:
-                  adjustZoom(x, y, zoomFactor * 2);
-                   break;
-                   //right
+            Action wPressed = new AbstractAction() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    moveUp();
+                }
+            };
+            Action aPressed = new AbstractAction() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    moveLeft();
+                }
+            };
+            Action sPressed = new AbstractAction() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    moveDown();
+                }
+            };
+            Action dPressed = new AbstractAction() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    moveRight();
+                }
+            };
+
+            this.getInputMap().put(wKey, "w_key");
+            this.getInputMap().put(aKey, "a_key");
+            this.getInputMap().put(sKey, "s_key");
+            this.getInputMap().put(dKey, "d_key");
+
+            this.getActionMap().put("w_key", wPressed);
+            this.getActionMap().put("a_key", aPressed);
+            this.getActionMap().put("s_key", sPressed);
+            this.getActionMap().put("d_key", dPressed);
+
+        }
+
+        public void paintComponent(Graphics drawingObj) {
+            drawingObj.drawImage(fractalImage, 0, 0, null);
+        }
+
+        @Override
+        public void mouseReleased(MouseEvent mouse) {
+        }
+
+        @Override
+        public void mouseClicked(MouseEvent mouse) {
+        }
+
+        @Override
+        public void mouseEntered(MouseEvent mouse) {
+        }
+
+        @Override
+        public void mouseExited(MouseEvent mouse) {
+        }
+
+        public void mousePressed(MouseEvent mouse) {
+
+            double x = (double) mouse.getX();
+            double y = (double) mouse.getY();
+
+            switch (mouse.getButton()) {
+                //Left
+                case MouseEvent.BUTTON1:
+                    adjustZoom(x, y, zoomFactor * 2);
+                    break;
+                //right
                 case MouseEvent.BUTTON3:
-                 adjustZoom(x, y, zoomFactor /2);
-                 break;
-           
-           }
-       }
-       
-      
+                    adjustZoom(x, y, zoomFactor / 2);
+                    break;
+
+            }
+        }
+
     }
 
-    public static void main(String [] args)
-    {
+    public static void main(String[] args) {
         new FractalExplorer();
     }
 
