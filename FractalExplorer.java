@@ -59,14 +59,29 @@ public class FractalExplorer extends JFrame {
         canvas.repaint();
     }
 
-    private int makeColor(int iterCount) {
-        int color = 0b011011100001100101101000;
-        int mask = 0b000000000000010101110111;
-        int shiftMag = iterCount / 13;
+    // private int makeColor(int iterCount) {
+    //     int color = 0b011011100001100101101000;
+    //     int mask = 0b000000000000010101110111;
+    //     int shiftMag = iterCount / 13;
 
-        if (iterCount == MAX_ITER)
-            return Color.BLACK.getRGB();
-        return color | (mask << shiftMag);
+    //     if (iterCount == MAX_ITER)
+    //         return Color.BLACK.getRGB();
+    //     return color | (mask << shiftMag);
+    // }
+    private int makeColor(int iterCount) {
+        if (iterCount == MAX_ITER) {
+            return Color.BLACK.getRGB(); // Points inside the set are black
+        }
+
+        // Use sine functions to generate smooth color gradients
+        double hue = 0.7 + 0.3 * Math.cos(iterCount * 0.1);
+        double saturation = 0.5 + 0.5 * Math.cos(iterCount * 0.2);
+        double brightness = 0.5 + 0.5 * Math.sin(iterCount * 0.3);
+
+        // Convert HSV to RGB
+        Color color = Color.getHSBColor((float) hue, (float) saturation, (float) brightness);
+
+        return color.getRGB();
     }
 
     private int computeIterations(double c_r, double c_i) {
