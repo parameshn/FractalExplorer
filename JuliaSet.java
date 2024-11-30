@@ -54,15 +54,7 @@ public class JuliaSet extends JFrame {
         canvas.repaint();
     }
 
-    // private int makeColor(int iterCount) {
-    //     int color = 0b011011100001110101101110;
-    //     int mask = 0b000000000000011111111111;
-    //     int shiftMag = iterCount / 13;
-
-    //     if (iterCount == MAX_ITER)
-    //         return Color.BLACK.getRGB();
-    //     return color | (mask << shiftMag);
-    // }
+    
     private int makeColor(int iterCount) {
         if (iterCount == MAX_ITER) {
             return Color.BLACK.getRGB(); // Points inside the set are black
@@ -121,17 +113,7 @@ public class JuliaSet extends JFrame {
         updateFractal();
     }
 
-    // private void moveLeft() {
-    //     double curHeight = WIDTH / zoomFactor;
-    //     topLeftY -= curHeight / 6;
-    //     updateFractal();
-    // }
-
-    // private void moveRight() {
-    //     double curHeight = WIDTH / zoomFactor;
-    //     topLeftY += curHeight / 6;
-    //     updateFractal();
-    // }
+    
     private void moveLeft() {
         double curWidth = WIDTH / zoomFactor; // Use width for horizontal movement
         topLeftX -= curWidth / 6; // Move left by a fraction of the width
